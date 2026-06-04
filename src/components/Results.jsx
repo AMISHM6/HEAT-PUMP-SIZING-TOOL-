@@ -19,16 +19,28 @@ export default function Results({ results, onReset }) {
   if (!results) return null;
 
   const barData = [
-    { name: "PNG Boiler\n(Baseline)", cost: results.annualPNGCost, fill: "#ef4444" },
-    { name: `Heat Pump\n(${results.hpType?.split(" ")[0]})`, cost: results.annualElecCost, fill: "#22c55e" },
+    { name: "PNG Boiler\n(Baseline)", cost: results.annualPNGCost, fill: "#8a7a72" },
+    { name: `Heat Pump\n(${results.hpType?.split(" ")[0]})`, cost: results.annualElecCost, fill: "#CA3604" },
   ];
 
   const pieData = [
-    { name: "HP Electricity Cost", value: results.annualElecCost, fill: "#6ee7b7" },
-    { name: "Annual Savings", value: results.annualSavings, fill: "#10b981" },
+    { name: "HP Electricity Cost", value: results.annualElecCost, fill: "#E85A20" },
+    { name: "Annual Savings", value: results.annualSavings, fill: "#CA3604" },
   ];
 
   const steps = [
+    {
+      label: "Total Persons",
+      value: `${cr(results.units)} units × ${results.personsPerUnit} persons = ${cr(results.totalPersons)} persons`,
+    },
+    {
+      label: "Hot Water (occupancy)",
+      value: `${cr(results.totalPersons)} × ${results.litresPerPerson} L/day = ${cr(results.mainDemandL)} L/day`,
+    },
+    {
+      label: "Public Area Allowance (50%)",
+      value: `${cr(results.publicAreaL)} L/day`,
+    },
     { label: "Daily Hot Water Demand", value: `${results.dailyHotWaterKL} kL/day` },
     { label: "Peak Demand (50% in 3 hrs)", value: `${results.peakDemandKL} kL` },
     { label: "Peak Heating Energy", value: `${cr(results.heatingKCal)} kCal` },
@@ -59,13 +71,13 @@ export default function Results({ results, onReset }) {
 
       {/* KPIs */}
       <div className="kpi-row">
-        <KPI color="#3b82f6" label="HP Capacity" value={`${results.capacityKW} kW`} sub={`${results.capacityTR} TR · incl. 15% margin`} />
-        <KPI color="#10b981" label="Corrected COP" value={results.correctedCOP} sub={`At ${results.designTemp}°C outdoor`} />
-        <KPI color="#f59e0b" label="Annual PNG Saved" value={`${cr(results.annualSCM)} SCM`} sub="vs boiler baseline" />
-        <KPI color="#a855f7" label="Annual Savings" value={inr(results.annualSavings)} sub={`${results.savingsPct}% reduction`} />
-        <KPI color="#14b8a6" label="CO₂ Avoided" value={`${cr(results.co2AvoidedTons)} tonnes of CO₂/year`} sub="Baseline vs heat pump" />
+        <KPI color="#CA3604" label="HP Capacity" value={`${results.capacityKW} kW`} sub={`${results.capacityTR} TR · incl. 15% margin`} />
+        <KPI color="#E85A20" label="Corrected COP" value={results.correctedCOP} sub={`At ${results.designTemp}°C outdoor`} />
+        <KPI color="#E07850" label="Annual PNG Saved" value={`${cr(results.annualSCM)} SCM`} sub="vs boiler baseline" />
+        <KPI color="#CA3604" label="Annual Savings" value={inr(results.annualSavings)} sub={`${results.savingsPct}% reduction`} />
+        <KPI color="#B84A1A" label="CO₂ Avoided" value={`${cr(results.co2AvoidedTons)} tonnes of CO₂/year`} sub="Baseline vs heat pump" />
         {results.paybackMonths && (
-          <KPI color="#ec4899" label="Payback Period" value={`${results.paybackMonths} mo`} sub={`Investment: ${inr(results.investment)}`} />
+          <KPI color="#9A2A03" label="Payback Period" value={`${results.paybackMonths} mo`} sub={`Investment: ${inr(results.investment)}`} />
         )}
       </div>
 
@@ -91,13 +103,13 @@ export default function Results({ results, onReset }) {
           <p className="card-sub">Heat Pump vs PNG Boiler (₹/year)</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={barData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="name" tick={{ fill: "#888", fontSize: 11 }} />
-              <YAxis tickFormatter={(v) => `₹${(v / 100000).toFixed(1)}L`} tick={{ fill: "#888", fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(25,19,18,0.08)" />
+              <XAxis dataKey="name" tick={{ fill: "#6b5f58", fontSize: 11 }} />
+              <YAxis tickFormatter={(v) => `₹${(v / 100000).toFixed(1)}L`} tick={{ fill: "#6b5f58", fontSize: 11 }} />
               <Tooltip
                 formatter={(v) => [inr(v), "Annual Cost"]}
-                contentStyle={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 10 }}
-                labelStyle={{ color: "#e5e7eb" }}
+                contentStyle={{ background: "#ffffff", border: "1px solid rgba(25,19,18,0.14)", borderRadius: 10 }}
+                labelStyle={{ color: "#191312" }}
               />
               <Bar dataKey="cost" radius={[8, 8, 0, 0]}>
                 {barData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
@@ -125,7 +137,7 @@ export default function Results({ results, onReset }) {
               </Pie>
               <Tooltip
                 formatter={(v) => inr(v)}
-                contentStyle={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 10 }}
+                contentStyle={{ background: "#ffffff", border: "1px solid rgba(25,19,18,0.14)", borderRadius: 10 }}
               />
               <Legend wrapperStyle={{ fontSize: 12, color: "#9ca3af" }} />
             </PieChart>
@@ -142,10 +154,16 @@ export default function Results({ results, onReset }) {
             <tr><td>City</td><td>{results.city}</td></tr>
             <tr><td>IS Climate Zone</td><td>{results.climateZone}</td></tr>
             <tr><td>Outdoor Design Temp (Cooling)</td><td>{results.designTemp}°C</td></tr>
+            <tr><td>Outdoor Design Temp (Heating)</td><td>{results.designTempH}°C</td></tr>
             <tr><td>Building Type</td><td>{results.buildingType}</td></tr>
             <tr><td>Units (Rooms / Beds / Flats)</td><td>{results.units}</td></tr>
 
             <tr className="section-row"><td colSpan={2}>💧 Hot Water Demand</td></tr>
+            <tr><td>Persons per Unit</td><td>{results.personsPerUnit}</td></tr>
+            <tr><td>Hot Water per Person</td><td>{results.litresPerPerson} L/day</td></tr>
+            <tr><td>Total Persons</td><td>{cr(results.units)} × {results.personsPerUnit} = {cr(results.totalPersons)}</td></tr>
+            <tr><td>Occupancy Demand</td><td>{cr(results.totalPersons)} × {results.litresPerPerson} L = {cr(results.mainDemandL)} L/day</td></tr>
+            <tr><td>Public Area Allowance (50%)</td><td>{cr(results.publicAreaL)} L/day</td></tr>
             <tr><td>Daily Hot Water Demand</td><td>{results.dailyHotWaterKL} kL/day</td></tr>
             <tr><td>Peak Demand (50% in 3 hrs)</td><td>{results.peakDemandKL} kL</td></tr>
             <tr><td>Peak Heating Energy</td><td>{cr(results.heatingKCal)} kCal</td></tr>

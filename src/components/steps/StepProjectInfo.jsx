@@ -48,7 +48,7 @@ export default function StepProjectInfo({ data, onChange }) {
             onChange={(e) => onChange("city", e.target.value)}
           >
             <option value="">Select city…</option>
-            {Object.keys(CITIES).map((c) => (
+            {Object.keys(CITIES).sort().map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
@@ -115,13 +115,20 @@ export default function StepProjectInfo({ data, onChange }) {
           <div className="field-group">
             <label className="field-label">Avg Persons per Unit</label>
             <input
-  className="field-input"
-  type="number"
-  min="1"
-  step="1"
-  vvalue={data.personsPerUnit || ""}
-  onChange={(e) => onChange("personsPerUnit", parseInt(e.target.value) || 2)}
-/>
+              className="field-input"
+              type="number"
+              min="1"
+              step="1"
+              placeholder={String(DEFAULT_PERSONS[data.buildingType] ?? 2)}
+              value={data.personsPerUnit ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                onChange("personsPerUnit", v === "" ? "" : parseInt(v, 10));
+              }}
+            />
+            <span className="field-hint">
+              Default: {DEFAULT_PERSONS[data.buildingType]} persons per unit
+            </span>
             
           </div>
 

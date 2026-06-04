@@ -27,11 +27,7 @@ export default function StepHPType({ data, onChange }) {
             >
               <div className="hp-img-wrap">
   {HP_IMAGES[type] && (
-    <img
-      src={HP_IMAGES[type]}
-      alt={type}
-      style={{ width: "180px", height: "180px", objectFit: "contain", display: "block", margin: "0 auto" }}
-    />
+    <img className="hp-img" src={HP_IMAGES[type]} alt={type} />
   )}
 </div>
               <span className="hp-name">{type}</span>

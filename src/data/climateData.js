@@ -4,6 +4,7 @@ export const CITIES = {
   "Bangalore":  { zone: "Temperate",   designTempC: 34, designTempH: 14, wetBulb: 24 },
   "Chennai":    { zone: "Warm & Humid",designTempC: 40, designTempH: 22, wetBulb: 30 },
   "Hyderabad":  { zone: "Composite",   designTempC: 40, designTempH: 10, wetBulb: 26 },
+  "Agra":       { zone: "Composite",   designTempC: 43, designTempH: 5,  wetBulb: 28 },
   "Ahmedabad":  { zone: "Hot & Dry",   designTempC: 44, designTempH: 8,  wetBulb: 26 },
   "Pune":       { zone: "Composite",   designTempC: 38, designTempH: 10, wetBulb: 25 },
   "Kolkata":    { zone: "Warm & Humid",designTempC: 38, designTempH: 12, wetBulb: 30 },

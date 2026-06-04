@@ -2,14 +2,18 @@ import React, { useState } from "react";
 import StepProjectInfo from "./components/steps/StepProjectInfo";
 import StepHPType from "./components/steps/StepHPType";
 import Results from "./components/Results";
+import BackgroundMachines from "./components/BackgroundMachines";
 import { runSizingEngine } from "./utils/sizingEngine";
 import "./styles.css";
 
 const defaultData = {
   projectName: "", city: "", buildingType: "", units: "",
+  personsPerUnit: "", litresPerPerson: "",
   hpType: "", investment: "", electricityRate: "", pngRate: "",
   baseline: "PNG Boiler",
 };
+
+const STEPS = ["Project Info", "HP Selection", "Results"];
 
 function validate(step, d) {
   if (step === 1) return d.city && d.buildingType && d.units > 0;
@@ -18,35 +22,60 @@ function validate(step, d) {
 }
 
 export default function App() {
-  const [step, setStep]       = useState(1);
-  const [data, setData]       = useState(defaultData);
-  const [results, setResults] = useState(null);
-  const [error, setError]     = useState("");
+  const [step, setStep]             = useState(1);
+  const [furthestStep, setFurthest] = useState(1);
+  const [data, setData]             = useState(defaultData);
+  const [results, setResults]       = useState(null);
+  const [error, setError]           = useState("");
 
   const set = (k, v) => { setData((p) => ({ ...p, [k]: v })); setError(""); };
 
+  const goToStep = (target) => {
+    if (target < 1 || target > 3 || target > furthestStep) return;
+    if (target === 3 && !results) return;
+    setStep(target);
+    setError("");
+  };
+
+  const back = () => {
+    if (step > 1) goToStep(step - 1);
+  };
+
   const next = () => {
-    if (!validate(step, data)) { setError("Please complete all required fields."); return; }
+    if (!validate(step, data)) {
+      setError("Please complete all required fields.");
+      return;
+    }
     setError("");
     if (step === 2) {
       try {
         const r = runSizingEngine(data);
         setResults(r);
+        setFurthest(3);
         setStep(3);
-      } catch (e) { setError("Calculation error: " + e.message); }
-    } else { setStep(step + 1); }
+      } catch (e) {
+        setError("Calculation error: " + e.message);
+      }
+    } else {
+      const nextStep = step + 1;
+      setFurthest((f) => Math.max(f, nextStep));
+      setStep(nextStep);
+    }
   };
 
-  const reset = () => { setData(defaultData); setResults(null); setStep(1); setError(""); };
-
-  const STEPS = ["Project Info", "HP Selection", "Results"];
+  const reset = () => {
+    setData(defaultData);
+    setResults(null);
+    setStep(1);
+    setFurthest(1);
+    setError("");
+  };
 
   return (
     <div className="shell">
-      {/* Ambient background */}
       <div className="bg-mesh" />
+      <BackgroundMachines />
 
-      {/* Header */}
       <header className="topbar">
         <div className="topbar-inner">
           <div className="brand">
@@ -56,22 +85,33 @@ export default function App() {
               <div className="brand-sub">IS / ECBC Sizing Engine</div>
             </div>
           </div>
+
           <div className="topbar-right">
-            {step < 3 && (
-              <div className="step-dots">
-                {STEPS.map((s, i) => (
-                  <div key={i} className={`dot ${i + 1 === step ? "active" : ""} ${i + 1 < step ? "done" : ""}`}>
-                    <span>{i + 1 < step ? "✓" : i + 1}</span>
-                    <label>{s}</label>
-                  </div>
-                ))}
-              </div>
-            )}
+            <nav className="step-dots" aria-label="Form progress">
+              {STEPS.map((label, i) => {
+                const n = i + 1;
+                const isCurrent = n === step;
+                const isDone = n < step;
+                const reachable = n <= furthestStep && (n !== 3 || results);
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    className={`dot ${isCurrent ? "active" : ""} ${isDone ? "done" : ""}`}
+                    disabled={!reachable}
+                    onClick={() => goToStep(n)}
+                    aria-current={isCurrent ? "step" : undefined}
+                  >
+                    <span>{isDone ? "✓" : n}</span>
+                    <label>{label}</label>
+                  </button>
+                );
+              })}
+            </nav>
           </div>
         </div>
       </header>
 
-      {/* Main */}
       <main className="main">
         <div className={`card ${step === 3 ? "card-wide" : ""}`}>
           {step === 1 && <StepProjectInfo data={data} onChange={set} />}
@@ -80,15 +120,19 @@ export default function App() {
 
           {error && <div className="err-bar">⚠ {error}</div>}
 
-          {step < 3 && (
-            <div className="nav-bar">
-              {step > 1 && <button className="btn-back" onClick={() => { setStep(step - 1); setError(""); }}>← Back</button>}
-              <div style={{ flex: 1 }} />
-              <button className="btn-next" onClick={next}>
+          <div className="nav-bar">
+            {step > 1 && (
+              <button type="button" className="btn-back" onClick={back}>
+                ← Back
+              </button>
+            )}
+            <div style={{ flex: 1 }} />
+            {step < 3 && (
+              <button type="button" className="btn-next" onClick={next}>
                 {step === 2 ? "Calculate →" : "Continue →"}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </main>
 

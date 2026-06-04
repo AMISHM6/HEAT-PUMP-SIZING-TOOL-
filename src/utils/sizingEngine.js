@@ -29,13 +29,28 @@ export function calcDailyHotWater({ buildingType, units, personsPerUnit: customP
     "Industrial":  25,
   };
 
-  const personsPerUnit = customPersons || (PERSONS_PER_UNIT[buildingType] ?? 2);
-const litresPerPerson = customLitres || (LPP[buildingType] ?? 40);
+  const personsPerUnit =
+    customPersons != null && customPersons !== ""
+      ? Number(customPersons)
+      : (PERSONS_PER_UNIT[buildingType] ?? 2);
+  const litresPerPerson =
+    customLitres != null && customLitres !== ""
+      ? Number(customLitres)
+      : (LPP[buildingType] ?? 40);
 
   const totalPersons = units * personsPerUnit;
   const mainDemand = totalPersons * litresPerPerson;
-  const publicArea = mainDemand * 0.50; // 20% for public areas
-  return (mainDemand + publicArea) / 1000; // → kL/day
+  const publicArea = mainDemand * 0.50; // 50% allowance for public areas
+  const dailyKL = (mainDemand + publicArea) / 1000;
+
+  return {
+    dailyKL: +dailyKL.toFixed(2),
+    personsPerUnit,
+    litresPerPerson,
+    totalPersons,
+    mainDemandL: +mainDemand.toFixed(0),
+    publicAreaL: +publicArea.toFixed(0),
+  };
 }
 
 /**
@@ -124,10 +139,19 @@ export function calcAnnualSavings({ heatingKWh, correctedCOP, dailyKL }) {
  * MASTER ENGINE — runs all steps
  */
 export function runSizingEngine(inputs) {
-  const { city, buildingType, units, hpType, projectName, investment } = inputs;
+  const {
+    city, buildingType, units, hpType, projectName, investment,
+    personsPerUnit, litresPerPerson,
+  } = inputs;
   const cityData = CITIES[city];
 
-  const dailyKL        = calcDailyHotWater({ buildingType, units });
+  const hotWater = calcDailyHotWater({
+    buildingType,
+    units,
+    personsPerUnit,
+    litresPerPerson,
+  });
+  const dailyKL = hotWater.dailyKL;
   const peakKL         = calcPeakDemand(dailyKL);
   const heatingKCal    = calcHeatingEnergy(peakKL);
   const capacity       = calcHPCapacity(heatingKCal);
@@ -147,11 +171,17 @@ export function runSizingEngine(inputs) {
     city,
     climateZone:   cityData.zone,
     designTemp:    cityData.designTempC,
+    designTempH:   cityData.designTempH,
     buildingType,
     units,
     hpType,
+    personsPerUnit:   hotWater.personsPerUnit,
+    litresPerPerson:  hotWater.litresPerPerson,
+    totalPersons:     hotWater.totalPersons,
+    mainDemandL:      hotWater.mainDemandL,
+    publicAreaL:      hotWater.publicAreaL,
 
-    dailyHotWaterKL:  +dailyKL.toFixed(2),
+    dailyHotWaterKL:  hotWater.dailyKL,
     peakDemandKL:     +peakKL.toFixed(2),
     heatingKCal:      +heatingKCal.toFixed(0),
     heatingKWh:       capacity.heatingKWh,
